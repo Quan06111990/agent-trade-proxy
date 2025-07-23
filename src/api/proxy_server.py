@@ -5,33 +5,26 @@ import httpx
 
 app = FastAPI()
 
-headers = {
-    "User-Agent": "Mozilla/5.0",
-    "Accept": "application/json"
-}
+@app.get("/")
+async def home():
+    return {"message": "✅ Agent Trade Proxy is running!"}
 
 @app.get("/proxy/binance")
 async def proxy_binance(symbol: str = Query(...)):
     url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={symbol.upper()}"
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(url, headers=headers)
-            response.raise_for_status()
-            return response.json()
-    except httpx.HTTPStatusError as e:
-        return JSONResponse(status_code=e.response.status_code, content={"error": str(e)})
+            response = await client.get(url)
+            return JSONResponse(content=response.json())
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
 @app.get("/proxy/bybit")
 async def proxy_bybit(symbol: str = Query(...)):
-    url = f"https://api.bybit.com/v5/market/tickers?category=linear&symbol={symbol.upper()}"
+    url = f"https://api.bybit.com/v2/public/tickers?symbol={symbol.upper()}"
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(url, headers=headers)
-            response.raise_for_status()
-            return response.json()
-    except httpx.HTTPStatusError as e:
-        return JSONResponse(status_code=e.response.status_code, content={"error": str(e)})
+            response = await client.get(url)
+            return JSONResponse(content=response.json())
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        return JSONResponse(content={"error": str(e)}, status_code=500)
